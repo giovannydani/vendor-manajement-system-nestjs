@@ -1,4 +1,11 @@
-import { HttpException, Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { User } from '@prisma/client';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { PrismaService } from 'src/common/prisma.service';
 import {
@@ -48,5 +55,19 @@ export class UsersService {
     }
 
     return true;
+  }
+
+  async getUserByUsername(username: string): Promise<User> {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        username: username,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    return user;
   }
 }
