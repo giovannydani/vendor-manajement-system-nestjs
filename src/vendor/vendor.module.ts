@@ -7,5 +7,6 @@ import { VendorController } from './vendor.controller';
   imports: [PicModule],
   providers: [VendorService],
   controllers: [VendorController],
+  exports: [VendorService],
 })
 export class VendorModule {}
