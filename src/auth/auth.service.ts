@@ -1,11 +1,10 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { PrismaService } from 'src/common/prisma.service';
 import { ValidationService } from 'src/common/validation.service';
 import {
   CreateUserRequest,
-  LoginUserRequest,
-  toUserResponse,
+  //   toUserResponse,
   UserResponse,
 } from 'src/model/user.model';
 import { UsersService } from 'src/users/users.service';
@@ -13,7 +12,7 @@ import { UsersValidation } from 'src/users/users.validation';
 import { Logger } from 'winston';
 import { v4 as uuid } from 'uuid';
 import * as bcrypt from 'bcrypt';
-import { AuthValidation } from './auth.validation';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +21,7 @@ export class AuthService {
     @Inject(WINSTON_MODULE_PROVIDER) private logger: Logger,
     private userService: UsersService,
     private validationService: ValidationService,
+    private jwtService: JwtService,
   ) {}
 
   async Register(request: CreateUserRequest): Promise<UserResponse> {
@@ -41,18 +41,31 @@ export class AuthService {
     return user;
   }
 
-  async Login(request: LoginUserRequest): Promise<UserResponse> {
-    const requestUser: LoginUserRequest = this.validationService.validate(
-      AuthValidation.LOGIN,
-      request,
-    );
+  async validateUser(username: string, pass: string): Promise<any> {
+    const user = await this.userService.getUserByUsername(username);
 
-    const user = await this.userService.getUserByUsername(requestUser.username);
-
-    if (!(await bcrypt.compare(requestUser.password, user.password))) {
-      throw new UnauthorizedException();
+    if (await bcrypt.compare(pass, user.password)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...result } = user;
+      return result;
     }
 
-    return toUserResponse(user);
+    return null;
+  }
+
+  //   async Login(request: LoginUserRequest): Promise<UserResponse> {
+  async login(user: any) {
+    const payload = { username: user.username, sub: user.userId };
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
+  }
+
+  async getUserDetail(user: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = await this.userService.getUserByUsername(
+      user.username,
+    );
+    return result;
   }
 }
