@@ -22,3 +22,174 @@ model User {
 
   @@map("users")
 }
+
+model PicRole {
+  id String @id @db.VarChar(100)
+  name String @db.VarChar(100)
+
+  pic Pic[]
+
+  @@map("pic-roles")
+}
+
+model Bank {
+  id String @id @db.VarChar(100)
+  name String @db.VarChar(100)
+
+  account Account[]
+
+  @@map("banks")
+}
+
+model Vendor {
+  id String @id @db.VarChar(100)
+  number String @db.VarChar(100) @unique
+  name String @db.VarChar(100)
+  phone String @db.VarChar(20)
+  notes String? @db.Text
+  created_at DateTime @db.Timestamp() @default(now())
+  updated_at DateTime @db.Timestamp() @default(now())
+
+  pics Pic[]
+  accounts Account[]
+  quotations Quotation[]
+
+  @@map("vendors")
+}
+
+model Pic {
+  id String @id @db.VarChar(100)
+  vendor_id String @db.VarChar(100)
+  role_id String @db.VarChar(100)
+  name String @db.VarChar(100)
+  phone String @db.VarChar(20)
+  email String @db.VarChar(100)
+  default Boolean @db.Boolean()
+
+  vendor Vendor @relation(fields: [vendor_id], references: [id])
+  role PicRole @relation(fields: [role_id], references: [id])
+
+  @@map("pics")
+}
+
+model Account {
+  id String @id @db.VarChar(100)
+  vendor_id String @db.VarChar(100)
+  bank_id String @db.VarChar(100)
+  number String @db.VarChar(100)
+  name String @db.VarChar(100)
+  bank_branch String @db.VarChar(100)
+  status Boolean @db.Boolean()
+
+  vendor Vendor @relation(fields: [vendor_id], references: [id])
+  bank Bank @relation(fields: [bank_id], references: [id])
+
+  @@map("accounts")
+}
+
+model Unit {
+  id String @id @db.VarChar(100)
+  name String @db.VarChar(100)
+
+  items SlipOrderItem[]
+  quotations Quotation[]
+
+  @@map("units")
+}
+
+model ItemCategory {
+  id String @id @db.VarChar(100)
+  name String @db.VarChar(100)
+
+  items SlipOrderItem[]
+
+  @@map("item-categories")
+}
+
+model Division {
+  id String @id @db.VarChar(100)
+  name String @db.VarChar(100)
+
+  SlipOrders SlipOrder[]
+  departements Departement[]
+
+  @@map("divisions")
+}
+
+model Departement {
+  id String @id @db.VarChar(100)
+  division_id String @db.VarChar(100)
+  name String @db.VarChar(100)
+
+  division Division @relation(fields: [division_id], references: [id])
+  slipOrder SlipOrder[]
+
+  @@map("departements")
+}
+
+model SlipOrder {
+  id String @id @db.VarChar(100)
+  departement_id String @db.VarChar(100)
+  division_id String @db.VarChar(100)
+  number String @db.VarChar(12) @unique
+  requester String @db.VarChar(100)
+  recived_date DateTime @db.Date
+  request_type String @db.VarChar(100)
+  status String @db.VarChar(100)
+  file String? @db.VarChar(255)
+  created_at DateTime @db.Timestamp() @default(now())
+  updated_at DateTime @db.Timestamp() @default(now())
+
+  departement Departement @relation(fields: [departement_id], references: [id])
+  division Division @relation(fields: [division_id], references: [id])
+  items SlipOrderItem[]
+
+  @@map("slip-orders")
+}
+
+model SlipOrderItem {
+  id String @id @db.VarChar(100)
+  slip_order_id String @db.VarChar(100)
+  category_id String @db.VarChar(100)
+  unit_id String @db.VarChar(100)
+  number String @db.VarChar(100)
+  quantity Float @db.DoublePrecision
+  name String @db.VarChar(100)
+  detail String @db.Text
+  created_at DateTime @db.Timestamp() @default(now())
+  updated_at DateTime @db.Timestamp() @default(now())
+
+  slipOrder SlipOrder @relation(fields: [slip_order_id], references: [id])
+  category ItemCategory @relation(fields: [category_id], references: [id])
+  unit Unit @relation(fields: [unit_id], references: [id])
+
+  quotations Quotation[]
+
+  @@map("slip-order-items")
+}
+
+model Quotation {
+  id String @id @db.VarChar(100)
+  item_id String @db.VarChar(100)
+  vendor_id String @db.VarChar(100)
+  unit_id String @db.VarChar(100)
+  number String @db.VarChar(100)
+  recived_date DateTime @db.Date
+  request_date DateTime @db.Date
+  price Float @db.DoublePrecision
+  status String @db.VarChar(100)
+  quotation Int? @db.Integer
+  quantity Int @db.Integer
+  notes String @db.Text
+  file String @db.VarChar(255)
+  file_path String @db.VarChar(255)
+  original_file_name String @db.VarChar(255)
+  created_at DateTime @db.Timestamp() @default(now())
+  updated_at DateTime @db.Timestamp() @default(now())
+
+  item SlipOrderItem @relation(fields: [item_id], references: [id])
+  vendor Vendor @relation(fields: [vendor_id], references: [id])
+  unit Unit @relation(fields: [unit_id], references: [id])
+
+  @@map("quotations")
+}
