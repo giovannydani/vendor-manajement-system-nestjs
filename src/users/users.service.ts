@@ -2,7 +2,6 @@ import {
   HttpException,
   Inject,
   Injectable,
-  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { User } from '@prisma/client';
@@ -13,6 +12,7 @@ import {
   toUserResponse,
   UserResponse,
 } from 'src/model/user.model';
+import { Logger } from 'winston';
 
 @Injectable()
 export class UsersService {
