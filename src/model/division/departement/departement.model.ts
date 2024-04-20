@@ -28,5 +28,6 @@ export type UpdateDepartementRequest = {
 };
 
 export type DepartementParams = {
-  id: string;
+  division_id: string;
+  id?: string;
 };
