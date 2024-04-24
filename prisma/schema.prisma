@@ -137,6 +137,8 @@ model SlipOrder {
   request_type String @db.VarChar(100)
   status String @db.VarChar(100)
   file String? @db.VarChar(255)
+  file_path String? @db.VarChar(255)
+  original_file_name String? @db.VarChar(255)
   created_at DateTime @db.Timestamp() @default(now())
   updated_at DateTime @db.Timestamp() @default(now())
 

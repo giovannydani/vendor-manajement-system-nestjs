@@ -7,5 +7,6 @@ import { DivisionModule } from '../division.module';
   imports: [forwardRef(() => DivisionModule)],
   providers: [DepartementService],
   controllers: [DepartementController],
+  exports: [DepartementService],
 })
 export class DepartementModule {}

@@ -5,6 +5,7 @@ import { UsersModule } from './users/users.module';
 import { VendorModule } from './vendor/vendor.module';
 import { DivisionModule } from './division/division.module';
 import { UnitModule } from './unit/unit.module';
+import { SlipOrderModule } from './slip-order/slip-order.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UnitModule } from './unit/unit.module';
     VendorModule,
     DivisionModule,
     UnitModule,
+    SlipOrderModule,
   ],
   controllers: [],
   providers: [],
