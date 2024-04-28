@@ -11,6 +11,7 @@ import {
   QuotationParams,
   QuotationResponse,
   toQuotationResponse,
+  UpdateQuotationRequest,
 } from 'src/model/slip-order/item/quotation/quotation.model';
 import { SlipOrderService } from 'src/slip-order/slip-order.service';
 import { QuotationValidation } from './quotation.validation';
@@ -92,10 +93,11 @@ export class QuotationService {
     return toQuotationResponse(quotation);
   }
 
-  async checkIdIsExist(id: string): Promise<Quotation> {
+  async checkIdIsExist(id: string, item_id?: string): Promise<Quotation> {
     const quotation = await this.prisma.quotation.findFirst({
       where: {
-        id,
+        id: id,
+        item_id: item_id,
       },
     });
 
@@ -110,7 +112,76 @@ export class QuotationService {
     await this.slipOrder.checkIdIsExist(params.slip_order_id);
     await this.itemService.checkIdIsExist(params.item_id, params.slip_order_id);
 
-    const quotation = await this.checkIdIsExist(params.id);
+    const quotation = await this.checkIdIsExist(params.id, params.item_id);
+
+    return toQuotationResponse(quotation);
+  }
+
+  async update(
+    params: QuotationParams,
+    req: UpdateQuotationRequest,
+    // req2: CreateQuotationRequest,
+    file?: Express.Multer.File,
+  ) {
+    await this.slipOrder.checkIdIsExist(params.slip_order_id);
+    await this.itemService.checkIdIsExist(params.item_id, params.slip_order_id);
+    const oldQuotation = await this.checkIdIsExist(params.id, params.item_id);
+
+    const requestQuotation: UpdateQuotationRequest =
+      this.validationService.validate(QuotationValidation.UPDATE, req);
+
+    if (requestQuotation.vendor_id) {
+      await this.vendorService.checkIdIsExist(requestQuotation.vendor_id);
+    }
+
+    if (requestQuotation.unit_id) {
+      await this.unitService.checkIdIsExist(requestQuotation.unit_id);
+    }
+
+    if (requestQuotation.recived_date) {
+      requestQuotation.recived_date = new Date(requestQuotation.recived_date);
+    }
+
+    if (requestQuotation.request_date) {
+      requestQuotation.request_date = new Date(requestQuotation.request_date);
+    }
+
+    if (requestQuotation.quantity) {
+      requestQuotation.quantity = parseInt(
+        requestQuotation.quantity.toString(),
+      );
+    }
+
+    if (requestQuotation.price) {
+      requestQuotation.price = parseInt(requestQuotation.price.toString());
+    }
+
+    if (requestQuotation.quotation) {
+      requestQuotation.quotation = parseInt(
+        requestQuotation.quotation.toString(),
+      );
+    }
+
+    if (file) {
+      this.fileService.deleteFile(oldQuotation.file);
+
+      const path = this.fileService.moveFile(
+        file.path,
+        this.getFileDestination(),
+        file.filename,
+      );
+
+      requestQuotation.file = path;
+      requestQuotation.file_path = this.getFileDestination();
+      requestQuotation.original_file_name = file.originalname;
+    }
+
+    const quotation = await this.prisma.quotation.update({
+      where: {
+        id: params.id,
+      },
+      data: requestQuotation,
+    });
 
     return toQuotationResponse(quotation);
   }
@@ -118,7 +189,7 @@ export class QuotationService {
   async delete(params: QuotationParams): Promise<QuotationResponse> {
     await this.slipOrder.checkIdIsExist(params.slip_order_id);
     await this.itemService.checkIdIsExist(params.item_id, params.slip_order_id);
-    await this.checkIdIsExist(params.id);
+    await this.checkIdIsExist(params.id, params.item_id);
 
     const quotation = await this.prisma.quotation.delete({
       where: {

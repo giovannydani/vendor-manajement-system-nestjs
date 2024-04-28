@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseFilePipeBuilder,
+  Patch,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -13,6 +14,7 @@ import { QuotationService } from './quotation.service';
 import {
   CreateQuotationRequest,
   QuotationParams,
+  UpdateQuotationRequest,
 } from 'src/model/slip-order/item/quotation/quotation.model';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -65,6 +67,36 @@ export class QuotationController {
   @Get(':id')
   async get(@Param() params: QuotationParams) {
     const response = await this.quotationService.get(params);
+
+    return {
+      data: response,
+    };
+  }
+
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        filename: (req, file, cb) => {
+          cb(null, uuid() + extname(file.originalname));
+        },
+        destination: (req, file, cb) => {
+          cb(null, './uploads/tmp/');
+        },
+      }),
+    }),
+  )
+  @Patch(':id')
+  async update(
+    @Param() params: QuotationParams,
+    @Body() request: UpdateQuotationRequest,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({ fileType: 'pdf' })
+        .build({ fileIsRequired: false }),
+    )
+    file?: Express.Multer.File,
+  ) {
+    const response = await this.quotationService.update(params, request, file);
 
     return {
       data: response,
